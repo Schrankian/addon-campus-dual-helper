@@ -1,0 +1,44 @@
+{
+    "name": "Campus Dual Helper",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "https://selfservice.campus-dual.de/room/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://selfservice.campus-dual.de/room/*"
+            ],
+            "js": [
+                "src/inject.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "src/content.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
+    "action": {
+        "default_popup": "src/popup.html",
+        "default_icon": {
+            "48": "images/icon48.png"
+        }
+    },
+    "background": {
+        "service_worker": "src/background.js"
+    },
+    "icons": {
+        "48": "images/icon48.png"
+    }
+}
