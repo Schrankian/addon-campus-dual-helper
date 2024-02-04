@@ -1,6 +1,6 @@
 const originalOpen = XMLHttpRequest.prototype.open;
-let disabledColor = document.currentScript.getAttribute('data-disabledColor');
-let hideDisabled = (/true/).test(document.currentScript.getAttribute('data-hideDisabled')); // Got as string, then made to bool
+console.log(document.currentScript.getAttribute('data-modifications'))
+let modifications = JSON.parse(document.currentScript.getAttribute('data-modifications')); // [{name: ..., color: ..., hide: ... },{...}]
 
 XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
   console.info("Request started");
@@ -23,11 +23,12 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
 function modifyResponse(response) {
   // Your modification logic here
   for(const [key, value] of response.entries()){
-    if (value.title.trim() == "DB" || true) {
-      response[key].color = disabledColor
-      console.log(hideDisabled, typeof hideDisabled)
-      if (hideDisabled) response[key].allDay = true; // This hides the lesson for some reason
-    };
+    for(const mod of modifications){
+      if (value.title.trim().includes(mod.name.trim())) {
+        response[key].color = mod.color;
+        if (mod.hide) response[key].allDay = true; // This hides the lesson for some reason
+      };
+    }
   }
   console.info(response)
   return response;
@@ -37,8 +38,7 @@ window.onmessage = function (message) {
   console.info("content script: ");
   console.info(message.data)
   if (message.data) { 
-    disabledColor = message.data.disabledColor; 
-    hideDisabled = message.data.hideDisabled;
+    modifications = message.data;
     $('#calendar').fullCalendar('refetchEvents');
   }
 }

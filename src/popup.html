@@ -7,15 +7,10 @@
 </head>
 <body>
     <h1>Campus Dual Helfer</h1>
-    <div class="row">
-        <label for="colorPicker">Farbe für Deaktivierte Stunden:</label>
-        <input type="color" id="colorPicker" />
+    <div id="content">
+
     </div>
-    <div class="row">
-        <label for="hideDisabledCheckbox">Deaktivierte Stunden ausblenden:</label>
-        <input type="checkbox" id="hideDisabledCheckbox" />
-    </div>
-    <button id="getDeaktivated">Kurs Auswählen</button>
+    <button id="elementPicker">Kurs Auswählen</button>
     <button class="submit-button" id="applyColor">Anwenden</button>
     <script src="popup.js"></script>
     <style>
@@ -29,14 +24,6 @@
             background-color: #282d34;
             color: #ffffff;
             padding: 0 20px;
-        }
-        .row {
-            width: 100%;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
         }
         [type="checkbox"]:not(:checked) {
             padding: 5px;

@@ -5,30 +5,76 @@ chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
         document.body.style = "display:none";
     }
 });
-document.addEventListener('DOMContentLoaded', function () {
-    const colorPicker = document.getElementById('colorPicker');
-    const hideDisabledCheckbox = document.getElementById('hideDisabledCheckbox');
-    const applyColorButton = document.getElementById('applyColor');
-    const getDeaktivatedButton = document.getElementById('getDeaktivated');
 
-    chrome.storage.sync.get(["disabledColor", "hideDisabled"]).then((result) => {
-        console.info("Got default color", result.disabledColor);
-        colorPicker.value = result.disabledColor ?? "#ffffff";
-        hideDisabledCheckbox.checked = result.hideDisabled ?? false;
+const sendMessage = async(action, content) => {
+    let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab) return;
+    chrome.tabs.sendMessage(tab.id, { action: action, modData: content });
+}
+
+const removeElement = (name)=>{
+    let row = document.getElementById(name);
+    row.remove();
+
+    chrome.storage.sync.get(["modData"]).then((result) => {
+        console.info("Got data", result.modData);
+        let modData = result.modData.filter((data) => data.name !== name);
+        chrome.storage.sync.set({modData: modData}).then(() => {
+            console.log("Color stored.");
+        })
+        sendMessage('updateContent', modData);
     });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const applyColorButton = document.getElementById('applyColor');
+    const elementPickerButton = document.getElementById('elementPicker');
+
+    chrome.storage.sync.get(["modData"]).then((result) => {
+    console.info("Got data", result.modData);
+    for(let data of result.modData){
+        ((data) => { // Necessary to create a new scope for the data. Otherwise only the last element would be used for the removal
+            let row = document.createElement('tr');
+            row.id = data.name;
+            let name = document.createElement('td');
+            let color = document.createElement('input');
+            color.type = 'color';
+            let hide = document.createElement('input');
+            hide.type = 'checkbox';
+            let remove = document.createElement('button');
+            remove.innerText = 'X';
+            remove.onclick = ()=>{removeElement(data.name)};
+
+            name.innerText = data.name;
+            color.value = data.color;
+            hide.checked = data.hide;
+
+            row.appendChild(name);
+            row.appendChild(color);
+            row.appendChild(hide);
+            row.appendChild(remove);
+            document.getElementById('content').appendChild(row);
+        })(data);
+    }
+});
 
     applyColorButton.addEventListener('click', async function () {
-        const selectedColor = colorPicker.value;
-        const hideDisabled = hideDisabledCheckbox.checked;
-        let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-        chrome.tabs.sendMessage(tab.id, { action: 'updateContent', disabledColor: selectedColor, hideDisabled: hideDisabled });
+        let modData = [];
+        let rows = document.getElementById('content').children;
+        for (let row of rows) {
+            let name = row.id;
+            let color = row.children[1].value;
+            let hide = row.children[2].checked;
+            modData.push({ name: name, color: color, hide: hide });
+        }
+        console.log('Sending message', modData);
+        sendMessage('updateContent', modData);
 
-        chrome.storage.sync.set({disabledColor: selectedColor, hideDisabled: hideDisabled}).then(() => {
+        chrome.storage.sync.set({modData: modData}).then(() => {
             console.log("Color stored.");
         })
     });
-    getDeaktivatedButton.addEventListener('click', async function () {
-        console.log("heyyy")
+    elementPickerButton.addEventListener('click', async function () {
+        sendMessage('startPicker');
     })
 });
-
